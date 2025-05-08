@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
 
 TGT_LANG=de
-# MODEL_DIR=./checkpoints/en-$TGT_LANG/st_extmt_doc_gate_loss_lambda0.3
-MODEL_DIR=./checkpoints/en-$TGT_LANG/test1
-HUBERT=./checkpoints/hubert_base_ls960.pt
-FAIRSEQ=./fairseq_cli
-DATA=./data/en-$TGT_LANG/doc-data-hubert
-PRETRAIN=/public/home/zhxgong/xytian/fairseq/checkpoints/en-de/st_baseline_extmt/st_baseline_extmt_27.83.pt
-TEXTDATA=/public/home/zhxgong/xytian/fairseq/data/en-$TGT_LANG/extra_mt/bin     # no use
+MODEL_DIR=checkpoints/en-$TGT_LANG/document_level_st
+HUBERT=checkpoints/hubert_base_ls960.pt
+DATA=data/en-$TGT_LANG-doc
+PRETRAIN=checkpoints/en-$TGT_LANG/pretrain_mt/avg_last_5_epoch.pt
+TEXTDATA=data/en-$TGT_LANG/extra_mt/bin     # no use
 
-CUDA_VISIBLE_DEVICES=0,1,2,3 python $FAIRSEQ/train.py $DATA \
-    --user-dir cress \
+CUDA_VISIBLE_DEVICES=0,1,2,3 fairseq-train $DATA \
+    --user-dir cast \
     --st-training --mt-finetune \
     --text-data $TEXTDATA \
     --task speech_and_text_translation --tgt-lang $TGT_LANG \
@@ -26,18 +24,16 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python $FAIRSEQ/train.py $DATA \
     --optimizer adam --clip-norm 0.0 \
     --lr-scheduler inverse_sqrt --lr 1e-4 --warmup-updates 4000 --weight-decay 0.0001 \
     \
-    --criterion speech_and_text_translation_mix_jsd_gate --doc-mode-gate --mix-ratio 0.4 --jsd-weight 1.0 --gate-weight 0.3 \
+    --criterion speech_and_text_translation_mix_jsd_gate --doc-mode-gate --mix-ratio 0.4 --jsd-weight 1.0 --gate-weight 0.5 \
     --label-smoothing 0.1 --report-accuracy \
     \
     --update-freq 2 --max-update 500000 \
     \
     --no-progress-bar --log-format json --log-interval 10 \
     --save-interval-updates 1000 --no-epoch-checkpoints \
-    --save-dir ${MODEL_DIR} \
+    --save-dir ${MODEL_DIR} --patience 10 \
     --distributed-world-size 4 --ddp-backend=no_c10d --fp16 \
     \
     --eval-bleu --eval-bleu-args '{"beam": 8}' \
     --eval-bleu-detok moses --eval-bleu-remove-bpe \
-    --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
-    \
-    1>./log/en-$TGT_LANG/xytian1.log 2>&1
+    --best-checkpoint-metric bleu --maximize-best-checkpoint-metric

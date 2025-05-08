@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
 TGT_LANG=de
-MODEL_DIR=checkpoints/en-$TGT_LANG/test
+MODEL_DIR=checkpoints/en-$TGT_LANG/sentence_level_st
 HUBERT=checkpoints/hubert_base_ls960.pt
-FAIRSEQ=fairseq_cli
 DATA=data/en-$TGT_LANG
-PRETRAIN=checkpoints/mt_base/mt.en-$TGT_LANG.base.pt
+PRETRAIN=checkpoints/en-$TGT_LANG/pretrain_mt/avg_last_5_epoch.pt
 
-CUDA_VISIBLE_DEVICES=0,1,2,3 python $FAIRSEQ/train.py $DATA \
-    --user-dir cress \
+CUDA_VISIBLE_DEVICES=0,1,2,3 fairseq-train $DATA \
+    --user-dir cast \
     --st-training --mt-finetune \
     --task speech_and_text_translation --tgt-lang $TGT_LANG \
     --train-subset train --valid-subset dev \
@@ -27,14 +26,13 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python $FAIRSEQ/train.py $DATA \
     \
     --update-freq 2 --max-update 200000 \
     \
-    --no-progress-bar --log-format json --log-interval 10 \
+    --no-progress-bar --log-format json --log-interval 100 \
     --save-interval-updates 1000 --no-epoch-checkpoints \
-    --save-dir ${MODEL_DIR} \
+    --save-dir ${MODEL_DIR} --patience 10 \
     --distributed-world-size 4 --ddp-backend=no_c10d --fp16 \
     \
     --eval-bleu --eval-bleu-args '{"beam": 8}' \
     --eval-bleu-detok moses --eval-bleu-remove-bpe \
     --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
     \
-    --load-pretrained-mt-encoder-decoder-from $PRETRAIN \
-    1>./log/en-$TGT_LANG/xytian.log 2>&1
+    --load-pretrained-mt-encoder-decoder-from $PRETRAIN
