@@ -147,10 +147,14 @@ sh cast/scripts/infer_d2s.sh
 If this repository is useful for you, please cite as:
 
 ```
-@inproceedings{tian-2025-improving,
-	title = {Improving End-to-end Speech-to-text Translation with Document-level Context},
-	author = {},
-	booktitle = {},
-	year = {},
+@ARTICLE{tian-etal-2025-improving,
+  author = {Tian, Xinyu and Wei, Haoran and Gong, Zhengxian and Li, Junhui and Xie, Jun},
+  journal = {IEEE Transactions on Audio, Speech and Language Processing}, 
+  title = {Improving End-to-End Speech-to-Text Translation With Document-Level Context}, 
+  year = {2025},
+  volume = {},
+  number = {},
+  pages = {1-13},
+  doi={10.1109/TASLPRO.2025.3570951}
 }
 ```
